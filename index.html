@@ -413,6 +413,7 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
+            list-style: none;
         }
 
         .footer-links a {
@@ -608,26 +609,7 @@
                 <h3>Filter by City</h3>
                 <select class="sidebar-select" id="sidebarCity">
                     <option value="">All Cities</option>
-                    <option value="Atlanta">Atlanta</option>
-                    <option value="Savannah">Savannah</option>
-                    <option value="Augusta">Augusta</option>
-                    <option value="Columbus">Columbus</option>
-                    <option value="Macon">Macon</option>
-                    <option value="Athens">Athens</option>
-                    <option value="Roswell">Roswell</option>
-                    <option value="Albany">Albany</option>
-                    <option value="Johns Creek">Johns Creek</option>
-                    <option value="Warner Robins">Warner Robins</option>
-                    <option value="Alpharetta">Alpharetta</option>
-                    <option value="Marietta">Marietta</option>
-                    <option value="Valdosta">Valdosta</option>
-                    <option value="Smyrna">Smyrna</option>
-                    <option value="Brookhaven">Brookhaven</option>
-                    <option value="Rome">Rome</option>
-                    <option value="Duluth">Duluth</option>
-                    <option value="Peachtree Corners">Peachtree Corners</option>
-                    <option value="Lawrenceville">Lawrenceville</option>
-                    <option value="Gainesville">Gainesville</option>
+                    <!-- Cities will be populated dynamically -->
                 </select>
             </div>
             
@@ -640,7 +622,7 @@
             <section class="search-section">
                 <div class="results-header">
                     <div>
-                        <span id="resultsCount">Viewing 5 results</span>
+                        <span id="resultsCount">Viewing 0 results</span>
                     </div>
                 </div>
 
@@ -677,15 +659,15 @@
     <footer>
         <div class="container">
             <div class="footer-content">
-                <div class="footer-links">
-                    <a href="#">Georgia Watch</a>
-                    <a href="#">Rankings</a>
-                    <a href="#">Methodology</a>
-                    <a href="#">About Us</a>
-                    <a href="#">Donate</a>
-                    <a href="#">Legal/Privacy</a>
-                    <a href="#">Site Map</a>
-                </div>
+                <ul class="footer-links">
+                    <li><a href="#">Georgia Watch</a></li>
+                    <li><a href="#">Rankings</a></li>
+                    <li><a href="#">Methodology</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Donate</a></li>
+                    <li><a href="#">Legal/Privacy</a></li>
+                    <li><a href="#">Site Map</a></li>
+                </ul>
                 <div class="copyright">
                     <p>Georgia Watch is a non-profit, nonpartisan 501(c)3 organization. © 2024 Georgia Watch. All Rights Reserved.</p>
                 </div>
@@ -703,7 +685,7 @@
             let mainMap = null;
             let markers = [];
 
-            // Hospital data (would normally be in a separate JSON file)
+            // Hospital data from JSON
             const hospitalData = {
                 "georgiaHospitals": [
                     {
@@ -839,6 +821,11 @@
                 // Initialize with the data
                 hospitalsData = hospitalData.georgiaHospitals;
                 filteredHospitals = [...hospitalsData];
+                
+                // Populate city dropdown
+                populateCityDropdown();
+                
+                // Display hospitals
                 displayHospitals(filteredHospitals);
                 
                 // Initialize the map
@@ -923,6 +910,32 @@
                 });
             }
 
+            function populateCityDropdown() {
+                const cityDropdown = document.getElementById('sidebarCity');
+                const cities = new Set();
+                
+                // Extract all unique cities from hospital data
+                hospitalsData.forEach(hospital => {
+                    // Extract city from address (assuming format: "Address, City, State ZIP")
+                    const addressParts = hospital.address.split(', ');
+                    if (addressParts.length >= 2) {
+                        const city = addressParts[1].replace(/,.*$/, ''); // Remove state part if exists
+                        cities.add(city);
+                    }
+                });
+                
+                // Sort cities alphabetically
+                const sortedCities = Array.from(cities).sort();
+                
+                // Add cities to dropdown
+                sortedCities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    cityDropdown.appendChild(option);
+                });
+            }
+
             function displayHospitals(hospitals) {
                 const resultsContainer = document.getElementById('hospitalResults');
                 const resultsCount = document.getElementById('resultsCount');
@@ -957,15 +970,19 @@
             
             function filterHospitals() {
                 const typeFilter = document.getElementById('sidebarHospitalType').value;
-                // Get city filter from sidebar
                 const cityFilter = document.getElementById('sidebarCity').value;
                 
                 filteredHospitals = hospitalsData.filter(hospital => {
                     const typeMatch = !typeFilter || 
                         (typeFilter === 'rural' && hospital.criticalAccess === 'Yes') ||
-                        (typeFilter === 'urban' && hospital.criticalAccess === 'No');
-                    // Add city filter
-                    const cityMatch = !cityFilter || hospital.address.includes(cityFilter);
+                        (typeFilter === 'urban' && hospital.criticalAccess === 'No') ||
+                        (typeFilter === 'nonprofit' && hospital.type === 'Nonprofit') ||
+                        (typeFilter === 'forprofit' && hospital.type === 'For Profit');
+                    
+                    // Extract city from address for filtering
+                    const addressParts = hospital.address.split(', ');
+                    const hospitalCity = addressParts.length >= 2 ? addressParts[1].replace(/,.*$/, '') : '';
+                    const cityMatch = !cityFilter || hospitalCity === cityFilter;
                     
                     return typeMatch && cityMatch;
                 });
@@ -1133,7 +1150,23 @@
                         </div>
                         
                         <div class="detail-page-section">
-                            <h3>Performance Metrics
+                            <h3>Performance Metrics</h3>
+                            <div class="metric-bars">
+                                ${Object.entries(hospital.metrics).map(([metric, value]) => {
+                                    const percentage = (value / 5) * 100;
+                                    return `
+                                        <div class="metric-bar">
+                                            <div class="metric-name">
+                                                <span>${formatMetricName(metric)}</span>
+                                                <span class="metric-value">${value.toFixed(1)}/5.0</span>
+                                            </div>
+                                            <div class="bar-container">
+                                                <div class="bar-fill" style="width: ${percentage}%"></div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
                         </div>
                     </div>
                     
