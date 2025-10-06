@@ -2070,7 +2070,7 @@
             function setupEventListeners() {
                 console.log('Setting up event listeners...');
                 
-                // Navigation links
+                // Navigation links - Main Page
                 document.getElementById('rankings-link').addEventListener('click', function(e) {
                     e.preventDefault();
                     showRankingsPage();
@@ -2081,6 +2081,7 @@
                     showMethodologyPage();
                 });
                 
+                // Footer navigation - Main Page
                 document.getElementById('home-link-footer').addEventListener('click', function(e) {
                     e.preventDefault();
                     showMainPage();
@@ -2097,6 +2098,21 @@
                 });
                 
                 // Details page navigation
+                document.getElementById('back-to-main').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showMainPage();
+                });
+                
+                document.getElementById('back-to-main-details').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showMainPage();
+                });
+                
+                document.getElementById('back-to-main-footer').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showMainPage();
+                });
+                
                 document.getElementById('rankings-link-details').addEventListener('click', function(e) {
                     e.preventDefault();
                     showRankingsPage();
@@ -2157,14 +2173,6 @@
                 document.getElementById('rankings-link-methodology-footer').addEventListener('click', function(e) {
                     e.preventDefault();
                     showRankingsPage();
-                });
-                
-                // Back to main page links
-                document.querySelectorAll('#back-to-main, #back-to-main-footer, #back-to-main-details').forEach(link => {
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        showMainPage();
-                    });
                 });
 
                 // Add toggle functionality to all dropdowns
@@ -2276,6 +2284,24 @@
                             
                             e.target.textContent = 'Hide Details';
                         }
+                    }
+                });
+                
+                // Handle browser back/forward buttons
+                window.addEventListener('popstate', function(event) {
+                    // Parse the current URL to determine which page to show
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const hospitalId = urlParams.get('id');
+                    const page = urlParams.get('page');
+                    
+                    if (hospitalId) {
+                        showDetailsPage(hospitalId);
+                    } else if (page === 'rankings') {
+                        showRankingsPage();
+                    } else if (page === 'methodology') {
+                        showMethodologyPage();
+                    } else {
+                        showMainPage();
                     }
                 });
                 
@@ -2512,7 +2538,7 @@
                             </td>
                             <td>
                                 <button class="details-button" data-id="${hospital.RECORD_ID}">View Details</button>
-                                <button class="details-button" data-id="${hospital.RECORD_ID}" style="background-color: #0053a1; margin-left: 5px;">View Full Details</button>
+                                <button class="details-button full-details-btn" data-id="${hospital.RECORD_ID}" style="background-color: #0053a1; margin-left: 5px;">View Full Details</button>
                             </td>
                         </tr>
                         `;
@@ -2521,7 +2547,7 @@
                 
                 resultsContainer.innerHTML = html;
                 
-                // Add event listeners to hospital links and full details buttons
+                // Add event listeners to hospital links
                 document.querySelectorAll('.hospital-link').forEach(link => {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
@@ -2530,14 +2556,13 @@
                     });
                 });
                 
-                document.querySelectorAll('.details-button').forEach(button => {
-                    if (button.textContent === 'View Full Details') {
-                        button.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            const hospitalId = this.getAttribute('data-id');
-                            showDetailsPage(hospitalId);
-                        });
-                    }
+                // Add event listeners to full details buttons
+                document.querySelectorAll('.full-details-btn').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const hospitalId = this.getAttribute('data-id');
+                        showDetailsPage(hospitalId);
+                    });
                 });
                 
                 // Clear any active dropdown when results change
@@ -2604,12 +2629,12 @@
                     </div>
                 </div>
                 <div style="text-align: center; margin-top: 15px;">
-                    <button class="details-button" data-id="${hospital.RECORD_ID}" style="background-color: #0053a1;">View Full Details Page</button>
+                    <button class="details-button full-details-btn" data-id="${hospital.RECORD_ID}" style="background-color: #0053a1;">View Full Details Page</button>
                 </div>
                 `;
                 
                 // Add event listener to the full details button
-                container.querySelector('.details-button').addEventListener('click', function() {
+                container.querySelector('.full-details-btn').addEventListener('click', function() {
                     const hospitalId = this.getAttribute('data-id');
                     showDetailsPage(hospitalId);
                 });
@@ -2626,8 +2651,8 @@
                 rankingsPage.style.display = 'none';
                 methodologyPage.style.display = 'none';
                 
-                // Update URL without page reload
-                window.history.pushState({}, '', window.location.pathname);
+                // Update URL and browser history
+                window.history.pushState({ page: 'main' }, '', window.location.pathname);
             }
 
             function showRankingsPage() {
@@ -2640,6 +2665,9 @@
                 detailsPage.style.display = 'none';
                 rankingsPage.style.display = 'block';
                 methodologyPage.style.display = 'none';
+                
+                // Update URL and browser history
+                window.history.pushState({ page: 'rankings' }, '', '?page=rankings');
                 
                 // Populate rankings tables
                 populateRankings();
@@ -2655,6 +2683,9 @@
                 detailsPage.style.display = 'none';
                 rankingsPage.style.display = 'none';
                 methodologyPage.style.display = 'block';
+                
+                // Update URL and browser history
+                window.history.pushState({ page: 'methodology' }, '', '?page=methodology');
             }
 
             function showDetailsPage(hospitalId) {
@@ -2668,8 +2699,8 @@
                 rankingsPage.style.display = 'none';
                 methodologyPage.style.display = 'none';
                 
-                // Update URL without page reload
-                window.history.pushState({}, '', `?id=${hospitalId}`);
+                // Update URL and browser history
+                window.history.pushState({ page: 'details', hospitalId: hospitalId }, '', `?id=${hospitalId}`);
                 
                 // Load and display hospital details
                 const hospital = hospitalsData.find(h => h.RECORD_ID == hospitalId);
