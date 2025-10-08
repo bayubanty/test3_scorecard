@@ -386,7 +386,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        /* Grade circles */
+        /* Grade circles - UPDATED FOR STARS */
         .grade-circle {
             display: inline-flex;
             align-items: center;
@@ -423,6 +423,44 @@
             background-color: #e74c3c; /* Red */
         }
 
+        /* Star rating styles for grade display */
+        .star-grade {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            margin-right: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            background-color: #f48810; /* Orange color for stars */
+        }
+
+        .star-grade-5 {
+            background-color: #2ecc71; /* Green for 5 stars */
+        }
+
+        .star-grade-4 {
+            background-color: #57d68d; /* Light Green for 4 stars */
+        }
+
+        .star-grade-3 {
+            background-color: #ffe135; /* Yellow for 3 stars */
+            color: #333;
+        }
+
+        .star-grade-2 {
+            background-color: #ffd700; /* Gold for 2 stars */
+            color: #333;
+        }
+
+        .star-grade-1 {
+            background-color: #e74c3c; /* Red for 1 star */
+        }
+
         /* Hospital name link */
         .hospital-link {
             color: #0053a1;
@@ -437,7 +475,7 @@
             text-decoration: underline;
         }
 
-        /* Details button */
+        /* Details button - UPDATED FOR ORANGE COLOR */
         .details-button {
             background-color: #f48810;
             color: white;
@@ -447,12 +485,20 @@
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s;
+            margin-right: 8px; /* Added spacing between buttons */
         }
 
         .details-button:hover {
-            background-color: #0053a1;
+            background-color: #e67e0f;
             transform: translateY(-2px);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Button container for side-by-side layout */
+        .button-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         /* Dropdown details section */
@@ -1021,6 +1067,15 @@
             .rankings-table {
                 display: block;
                 overflow-x: auto;
+            }
+            
+            .button-container {
+                flex-direction: column;
+            }
+            
+            .details-button {
+                margin-right: 0;
+                margin-bottom: 8px;
             }
         }
     </style>
@@ -1853,7 +1908,6 @@
                         "City": "Dalton",
                         "Address": "1200 MEMORIAL DRIVE",
                         "Zip": 30720,
-                        "Bed":"2",
                         "Lat": 34.773,
                         "Lng": -84.971,
                         "TYPE_NonProfit": 1,
@@ -1899,7 +1953,6 @@
                         "City": "Thomaston",
                         "Address": "801 W GORDON STREET",
                         "Zip": 30286,
-                        "Bed":"2",
                         "Lat": 32.888,
                         "Lng": -84.327,
                         "TYPE_NonProfit": 1,
@@ -1942,7 +1995,6 @@
                         "City": "Waycross",
                         "Address": "1900 TEBEAU STREET",
                         "Zip": 31501,
-                        "Bed":"2",
                         "Lat": 31.214,
                         "Lng": -82.355,
                         "TYPE_NonProfit": 0,
@@ -1986,7 +2038,6 @@
                         "City": "Atlanta",
                         "Address": "123 PEACHTREE ST",
                         "Zip": 30303,
-                        "Bed":"2",
                         "Lat": 33.755,
                         "Lng": -84.390,
                         "TYPE_NonProfit": 1,
@@ -2032,7 +2083,6 @@
                         "City": "Atlanta",
                         "Address": "456 METRO AVE",
                         "Zip": 30305,
-                        "Bed":"2",
                         "Lat": 33.830,
                         "Lng": -84.382,
                         "TYPE_NonProfit": 0,
@@ -2531,19 +2581,36 @@
                     html = `<tr><td colspan="3" style="text-align: center; padding: 30px;">No hospitals match your search criteria</td></tr>`;
                 } else {
                     hospitals.forEach((hospital) => {
-                        // Determine grade class for color coding
-                        const gradeClass = `grade-${hospital.TIER_1_GRADE_Lown_Composite}`;
+                        // Convert grade to star rating (A=5, B=4, C=3, D=2, F=1)
+                        const gradeToStars = {
+                            'A': 5,
+                            'B': 4,
+                            'C': 3,
+                            'D': 2,
+                            'F': 1
+                        };
+                        
+                        const starCount = gradeToStars[hospital.TIER_1_GRADE_Lown_Composite] || 1;
+                        const starClass = `star-grade-${starCount}`;
+                        
+                        // Generate star display
+                        let starDisplay = '';
+                        for (let i = 0; i < starCount; i++) {
+                            starDisplay += '★';
+                        }
                         
                         html += `
                         <tr>
-                            <td><span class="grade-circle ${gradeClass}">${hospital.TIER_1_GRADE_Lown_Composite}</span></td>
+                            <td><span class="star-grade ${starClass}">${starDisplay}</span></td>
                             <td>
                                 <a href="#" class="hospital-link" data-id="${hospital.RECORD_ID}">${hospital.Name}</a><br>
                                 ${hospital.Address}, ${hospital.City}, ${hospital.State} ${hospital.Zip}
                             </td>
                             <td>
-                                <button class="details-button" data-id="${hospital.RECORD_ID}">View Details</button>
-                                <button class="details-button full-details-btn" data-id="${hospital.RECORD_ID}" style="background-color: #0053a1; margin-left: 5px;">View Full Details</button>
+                                <div class="button-container">
+                                    <button class="details-button" data-id="${hospital.RECORD_ID}">View Details</button>
+                                    <button class="details-button full-details-btn" data-id="${hospital.RECORD_ID}">View Full Details</button>
+                                </div>
                             </td>
                         </tr>
                         `;
@@ -2634,7 +2701,9 @@
                     </div>
                 </div>
                 <div style="text-align: center; margin-top: 15px;">
-                    <button class="details-button full-details-btn" data-id="${hospital.RECORD_ID}" style="background-color: #0053a1;">View Full Details Page</button>
+                    <div class="button-container" style="justify-content: center;">
+                        <button class="details-button full-details-btn" data-id="${hospital.RECORD_ID}">View Full Details Page</button>
+                    </div>
                 </div>
                 `;
                 
